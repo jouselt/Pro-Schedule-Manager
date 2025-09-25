@@ -1,7 +1,7 @@
 {
     "name": "Pro Schedule Manager",
     "short_name": "Scheduler",
-    "start_url": "./shift_managers.html",
+    "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#3f51b5",

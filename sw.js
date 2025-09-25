@@ -6,7 +6,7 @@ const CACHE_NAME = 'pro-schedule-manager-v1';
 // A list of all the files we want to cache
 const urlsToCache = [
     './',
-    './shift_managers.html',
+    './index.html',
     './style.css',
     './script.js',
     './images/icon-512x512.png',

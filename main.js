@@ -15,7 +15,7 @@ function createWindow() {
     });
 
     // Load your existing HTML file into the window.
-    mainWindow.loadFile('shift_managers.html');
+    mainWindow.loadFile('index.html');
 
     // Open the DevTools (like Chrome's inspect element). Remove this for the final version.
     // mainWindow.webContents.openDevTools();
