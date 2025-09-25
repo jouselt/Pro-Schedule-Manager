@@ -29,79 +29,124 @@ body {
     background-color: var(--md-sys-color-surface);
     padding: 24px;
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 h1,
+h2,
 h3 {
-    text-align: center;
     color: var(--md-sys-color-primary);
-    margin-top: 0;
 }
 
-.controls,
-.export-controls,
-.crud-controls {
+#manager-schedule-container h2,
+#crew-schedule-container h2 {
+    margin-top: 32px;
+    margin-bottom: 8px;
+    border-bottom: 2px solid var(--md-sys-color-primary);
+    padding-bottom: 4px;
+}
+
+.controls {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
+    gap: 24px;
     margin-bottom: 20px;
-    padding: 10px;
-    border-radius: 8px;
-    background-color: var(--md-sys-color-surface-container-low);
+    align-items: center;
+    border-bottom: 1px solid var(--md-sys-color-outline);
+    padding-bottom: 20px;
 }
 
 .control-group {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+    /* Allow wrapping on small screens */
 }
 
-/* Tab Styles */
-md-tabs {
-    margin-bottom: 20px;
+.crud-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 16px;
 }
 
-.tab-panel {
-    border-top: 1px solid var(--md-sys-color-outline);
-    padding-top: 20px;
-}
-
-/* Table Styles */
-#table-wrapper,
-.crud-table-wrapper {
+#table-wrapper {
     overflow-x: auto;
+    /* Enable horizontal scrolling for the table */
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    table-layout: fixed;
 }
 
 th,
 td {
     border: 1px solid var(--md-sys-color-outline);
-    padding: 5px;
+    padding: 8px;
     text-align: center;
-    vertical-align: middle;
-    white-space: nowrap;
+    word-wrap: break-word;
 }
 
-thead th {
-    background-color: var(--md-sys-color-surface-container-highest);
-    font-weight: 500;
-    padding: 8px 5px;
+th {
+    background-color: var(--md-sys-color-surface-container-low);
 }
 
 .employee-name {
+    font-weight: 500;
+    white-space: nowrap;
     text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.date-header {
+    font-size: 0.8em;
+    font-weight: normal;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.warning-icon {
+    color: var(--md-sys-color-error);
+    font-size: 1.2em;
+}
+
+.tab-panel.edit-mode .shift-text {
+    display: none;
+}
+
+.tab-panel.view-mode .shift-select {
+    display: none;
+}
+
+.tab-panel.view-mode .export-controls {
+    display: block;
+}
+
+.tab-panel.edit-mode .export-controls {
+    display: none;
+}
+
+.add-shift-cta {
+    --md-icon-button-icon-color: var(--md-sys-color-primary);
+    --md-icon-button-hover-icon-color: var(--md-sys-color-primary);
+    --md-icon-button-focus-icon-color: var(--md-sys-color-primary);
+    --md-icon-button-pressed-icon-color: var(--md-sys-color-primary);
+}
+
+.shift-text {
     font-weight: 500;
     display: flex;
     align-items: center;
     gap: 4px;
+    justify-content: center;
 }
 
 .previous-shift-text {
@@ -111,19 +156,22 @@ thead th {
     font-style: italic;
 }
 
-
-/* --- Orange Themed Counter Section --- */
 #counters-container {
     background-color: #FFF3E0;
     border: 1px solid #E65100;
     padding: 8px 16px 16px;
     border-radius: 8px;
     margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
 }
 
 #counters-container h3 {
     color: #BF360C;
     margin-top: 16px;
+    grid-column: 1 / -1;
+    /* Make title span full width */
 }
 
 #counters-container table {
@@ -135,7 +183,6 @@ thead th {
     background-color: #FFCCBC;
 }
 
-/* Dialog & CRUD Table Styles */
 #employee-form,
 #shift-form {
     display: grid;
@@ -152,37 +199,50 @@ thead th {
     width: 40px;
     height: 20px;
     border: 1px solid var(--md-sys-color-outline);
-    border-radius: 4px;
     display: inline-block;
     vertical-align: middle;
 }
 
-/* View/Edit Mode & CTA Logic */
-.shift-select,
-.view-only-controls {
-    display: none;
-}
-
-.edit-mode .shift-text,
-.edit-mode .add-shift-cta {
-    display: none;
-}
-
-.edit-mode .shift-select {
-    display: block;
-}
-
-.view-mode .view-only-controls {
+.color-picker-label {
     display: flex;
+    align-items: center;
+    gap: 8px;
+    grid-column: 1 / -1;
+    /* Span both columns */
 }
 
-/* Responsive */
+/* --- RESPONSIVE DESIGN --- */
 @media (max-width: 768px) {
+    .container {
+        padding: 16px;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
 
     .controls,
-    .export-controls,
     .crud-controls {
         flex-direction: column;
         align-items: stretch;
+        gap: 16px;
+    }
+
+    .control-group {
+        justify-content: space-between;
+    }
+
+    #counters-container {
+        grid-template-columns: 1fr;
+    }
+
+    table,
+    .crud-table-wrapper table {
+        font-size: 12px;
+    }
+
+    th,
+    td {
+        padding: 4px;
     }
 }

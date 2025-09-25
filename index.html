@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF--8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pro Schedule Manager</title>
     <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -19,6 +19,7 @@
     <script type="module" src="https://esm.run/@material/web/all.js"></script>
     <link rel="stylesheet" href="style.css">
     <script src="script.js" type="module" defer></script>
+    <link rel="manifest" href="./manifest.json">
 </head>
 
 <body>
@@ -26,37 +27,37 @@
     <div class="container">
         <h1>Pro Schedule Manager</h1>
 
-        <md-tabs aria-label="Content to view">
-            <md-primary-tab id="tab-schedule" active>Schedule</md-primary-tab>
-            <md-primary-tab id="tab-employees">Manage Employees</md-primary-tab>
-            <md-primary-tab id="tab-shifts">Manage Shifts</md-primary-tab>
+        <md-tabs aria-label="Contenido a ver">
+            <md-primary-tab id="tab-schedule" active>Horario</md-primary-tab>
+            <md-primary-tab id="tab-employees">Gestionar Empleados</md-primary-tab>
+            <md-primary-tab id="tab-shifts">Gestionar Turnos</md-primary-tab>
         </md-tabs>
 
         <div class="tab-panel" id="panel-schedule" role="tabpanel" aria-labelledby="tab-schedule">
             <div class="controls">
                 <div class="control-group">
-                    <md-filled-button class="import-button" data-type="schedule">Import Schedule</md-filled-button>
-                    <md-filled-button class="import-button" data-type="previous-schedule">Import Previous
-                        Week</md-filled-button>
+                    <md-filled-button class="import-button" data-type="schedule">Importar Horario</md-filled-button>
+                    <md-filled-button class="import-button" data-type="previous-schedule">Importar Semana
+                        Anterior</md-filled-button>
                     <input type="file" id="csv-input" accept=".csv" style="display: none;">
                 </div>
                 <div class="control-group">
-                    <md-outlined-text-field id="template-name-input" label="Template Name"></md-outlined-text-field>
-                    <md-filled-button id="save-template-btn">Save as Template</md-filled-button>
+                    <md-outlined-text-field id="template-name-input" label="Nombre de Plantilla"></md-outlined-text-field>
+                    <md-filled-button id="save-template-btn">Guardar como Plantilla</md-filled-button>
                 </div>
                 <div class="control-group">
-                    <md-outlined-select id="template-select" label="Load Template">
+                    <md-outlined-select id="template-select" label="Cargar Plantilla">
                     </md-outlined-select>
-                    <md-filled-button id="generate-from-template-btn">Auto-Generate Schedule</md-filled-button>
+                    <md-filled-button id="generate-from-template-btn">Auto-Generar Horario</md-filled-button>
                 </div>
                 <div class="control-group">
-                    <label>Compare</label>
+                    <label>Comparar</label>
                     <md-switch id="compare-week-switch"></md-switch>
                 </div>
                 <div class="control-group">
-                    <label>View</label>
+                    <label>Ver</label>
                     <md-switch id="edit-mode-switch"></md-switch>
-                    <label>Edit</label>
+                    <label>Editar</label>
                 </div>
 
             </div>
@@ -64,16 +65,18 @@
             <div id="table-wrapper">
                 <div id="schedule-container">
                     <div id="placeholder">
-                        <p>Please import your Employee and Shift CSV files using the management tabs to begin.</p>
+                        <p>Por favor, importa tus archivos CSV de Empleados y Turnos usando las pestañas de gestión para comenzar.</p>
                     </div>
+                    <div id="manager-schedule-container"></div>
+                    <div id="crew-schedule-container"></div>
                 </div>
             </div>
             <div class="export-controls view-only-controls">
-                <h3>Export Current Schedule</h3>
+                <h3>Exportar Horario Actual</h3>
                 <div class="control-group">
-                    <md-filled-button id="export-schedule-csv">Schedule CSV</md-filled-button>
+                    <md-filled-button id="export-schedule-csv">Horario CSV</md-filled-button>
                     <md-filled-button id="export-excel">Excel</md-filled-button>
-                    <md-filled-button id="export-image">Image</md-filled-button>
+                    <md-filled-button id="export-image">Imagen</md-filled-button>
                     <md-filled-button id="export-pdf">PDF</md-filled-button>
                 </div>
             </div>
@@ -81,11 +84,10 @@
 
         <div class="tab-panel" id="panel-employees" role="tabpanel" aria-labelledby="tab-employees" hidden>
             <div class="crud-controls">
-                <h3>Employee Roster</h3>
+                <h3>Lista de Empleados</h3>
                 <div class="control-group">
-                    <md-filled-button class="import-button" data-type="employee">Import Employees</md-filled-button>
-                    <md-filled-button id="export-employees-csv-btn">Export Employees</md-filled-button>
-                    <md-filled-button id="add-new-employee-btn">Add New Employee</md-filled-button>
+                    <md-filled-button class="import-button" data-type="employee">Importar Empleados</md-filled-button>
+                    <md-filled-button id="add-new-employee-btn">Añadir Nuevo Empleado</md-filled-button>
                 </div>
             </div>
             <div class="crud-table-wrapper">
@@ -95,11 +97,11 @@
 
         <div class="tab-panel" id="panel-shifts" role="tabpanel" aria-labelledby="tab-shifts" hidden>
             <div class="crud-controls">
-                <h3>Shift Definitions</h3>
+                <h3>Definiciones de Turnos</h3>
                 <div class="control-group">
-                    <md-filled-button class="import-button" data-type="shift">Import Shifts</md-filled-button>
-                    <md-filled-button id="export-shifts-csv-btn">Export Shifts</md-filled-button>
-                    <md-filled-button id="add-new-shift-btn">Create New Shift</md-filled-button>
+                    <md-filled-button class="import-button" data-type="shift">Importar Turnos</md-filled-button>
+                    <md-filled-button id="export-shifts-csv-btn">Exportar Turnos</md-filled-button>
+                    <md-filled-button id="add-new-shift-btn">Crear Nuevo Turno</md-filled-button>
                 </div>
             </div>
             <div class="crud-table-wrapper">
@@ -109,44 +111,44 @@
     </div>
 
     <md-dialog id="shift-dialog">
-        <div slot="headline">Create/Edit Shift</div>
+        <div slot="headline">Crear/Editar Turno</div>
         <form id="shift-form" slot="content" method="dialog">
             <input type="hidden" name="originalCode">
-            <md-outlined-text-field label="Shift Code" name="code" required></md-outlined-text-field>
-            <md-outlined-select label="Category" name="category" required>
-                <md-select-option value="Morning">Morning</md-select-option>
-                <md-select-option value="Afternoon">Afternoon</md-select-option>
-                <md-select-option value="Night">Night</md-select-option>
-                <md-select-option value="Custom">Custom</md-select-option>
-                <md-select-option value="Off">Off</md-select-option>
+            <md-outlined-text-field label="Código de Turno" name="code" required></md-outlined-text-field>
+            <md-outlined-select label="Categoría" name="category" required>
+                <md-select-option value="Morning">Mañana</md-select-option>
+                <md-select-option value="Afternoon">Tarde</md-select-option>
+                <md-select-option value="Night">Noche</md-select-option>
+                <md-select-option value="Custom">Personalizado</md-select-option>
+                <md-select-option value="Off">Libre</md-select-option>
             </md-outlined-select>
-            <md-outlined-text-field label="Start Time" name="start" type="time" required></md-outlined-text-field>
-            <md-outlined-text-field label="End Time" name="end" type="time" required></md-outlined-text-field>
-            <md-outlined-text-field label="Worked Hours (auto)" name="hours" readonly></md-outlined-text-field>
-            <label class="color-picker-label">Shift Color<input type="color" name="color" value="#FFE0B2"></label>
+            <md-outlined-text-field label="Hora de Inicio" name="start" type="time" required></md-outlined-text-field>
+            <md-outlined-text-field label="Hora de Fin" name="end" type="time" required></md-outlined-text-field>
+            <md-outlined-text-field label="Horas Trabajadas (auto)" name="hours" readonly></md-outlined-text-field>
+            <label class="color-picker-label">Color del Turno<input type="color" name="color" value="#FFE0B2"></label>
         </form>
         <div slot="actions">
-            <md-text-button form="shift-form" value="cancel">Cancel</md-text-button>
-            <md-text-button form="shift-form" value="save">Save</md-text-button>
+            <md-text-button form="shift-form" value="cancel">Cancelar</md-text-button>
+            <md-text-button form="shift-form" value="save">Guardar</md-text-button>
         </div>
     </md-dialog>
 
     <md-dialog id="employee-dialog">
-        <div slot="headline">Edit Employee</div>
+        <div slot="headline">Editar Empleado</div>
         <form id="employee-form" slot="content" method="dialog">
             <input type="hidden" name="id">
-            <md-outlined-text-field label="Employee Name" name="Employee Name" required></md-outlined-text-field>
-            <md-outlined-text-field label="Title" name="Title" required></md-outlined-text-field>
-            <md-outlined-select label="Type" name="Type" required>
-                <md-select-option value="Manager">Manager</md-select-option>
-                <md-select-option value="Crew">Crew</md-select-option>
+            <md-outlined-text-field label="Nombre de Empleado" name="Employee Name" required></md-outlined-text-field>
+            <md-outlined-text-field label="Cargo" name="Title" required></md-outlined-text-field>
+            <md-outlined-select label="Tipo" name="Type" required>
+                <md-select-option value="Manager">Gerente</md-select-option>
+                <md-select-option value="Crew">Equipo</md-select-option>
             </md-outlined-select>
-            <md-outlined-text-field label="Contract Hours" name="Contract Hours" type="number"
+            <md-outlined-text-field label="Horas de Contrato" name="Contract Hours" type="number"
                 required></md-outlined-text-field>
         </form>
         <div slot="actions">
-            <md-text-button form="employee-form" value="cancel">Cancel</md-text-button>
-            <md-text-button form="employee-form" value="save">Save</md-text-button>
+            <md-text-button form="employee-form" value="cancel">Cancelar</md-text-button>
+            <md-text-button form="employee-form" value="save">Guardar</md-text-button>
         </div>
     </md-dialog>
 

@@ -15,35 +15,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('csv-input');
     const mainTabs = document.querySelector('md-tabs');
     const schedulePanel = document.getElementById('panel-schedule');
-    // Schedule Tab Elements
-    const editModeSwitch = document.getElementById('edit-mode-switch');
-    const compareWeekSwitch = document.getElementById('compare-week-switch');
     const scheduleContainer = document.getElementById('schedule-container');
+    const managerScheduleContainer = document.getElementById('manager-schedule-container');
+    const crewScheduleContainer = document.getElementById('crew-schedule-container');
     const countersContainer = document.getElementById('counters-container');
     const templateNameInput = document.getElementById('template-name-input');
     const saveTemplateBtn = document.getElementById('save-template-btn');
     const templateSelect = document.getElementById('template-select');
     const generateFromTemplateBtn = document.getElementById('generate-from-template-btn');
-    // Employee Tab Elements
+    const editModeSwitch = document.getElementById('edit-mode-switch');
+    const compareWeekSwitch = document.getElementById('compare-week-switch');
     const addNewEmployeeBtn = document.getElementById('add-new-employee-btn');
     const employeesCrudTable = document.getElementById('employees-crud-table');
     const employeeDialog = document.getElementById('employee-dialog');
     const employeeForm = document.getElementById('employee-form');
     const exportEmployeesBtn = document.getElementById('export-employees-csv-btn');
-    // Shift Tab Elements
     const addNewShiftBtn = document.getElementById('add-new-shift-btn');
     const shiftsCrudTable = document.getElementById('shifts-crud-table');
     const exportShiftsBtn = document.getElementById('export-shifts-csv-btn');
     const shiftDialog = document.getElementById('shift-dialog');
     const shiftForm = document.getElementById('shift-form');
-    // Export Buttons
     const exportScheduleCsvBtn = document.getElementById('export-schedule-csv');
     const exportExcelBtn = document.getElementById('export-excel');
     const exportImageBtn = document.getElementById('export-image');
     const exportPdfBtn = document.getElementById('export-pdf');
-    // CRUD Controls
-    const manageShiftsBtn = document.getElementById('manage-shifts-btn');
-
 
     // --- LOCAL STORAGE PERSISTENCE ---
     const saveState = () => {
@@ -52,10 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('scheduler_shifts', JSON.stringify(shifts));
             localStorage.setItem('scheduler_previousSchedule', JSON.stringify(previousSchedule));
             localStorage.setItem('scheduler_templates', JSON.stringify(templates));
-            console.log("State saved.");
         } catch (e) {
-            console.error("Error saving state to localStorage:", e);
-            alert("Could not save the current state. The browser's storage might be full or disabled.");
+            console.error("Error al guardar el estado en localStorage:", e);
+            alert("No se pudo guardar el estado actual. El almacenamiento del navegador podría estar lleno o deshabilitado.");
         }
     };
 
@@ -65,13 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const storedShifts = localStorage.getItem('scheduler_shifts');
             const storedPrevious = localStorage.getItem('scheduler_previousSchedule');
             const storedTemplates = localStorage.getItem('scheduler_templates');
-
             if (storedEmployees) employees = JSON.parse(storedEmployees);
             if (storedShifts) shifts = JSON.parse(storedShifts);
             if (storedPrevious) previousSchedule = JSON.parse(storedPrevious);
             if (storedTemplates) templates = JSON.parse(storedTemplates);
         } catch (e) {
-            console.error("Failed to load state from localStorage", e);
+            console.error("Error al cargar el estado desde localStorage", e);
             employees = []; shifts = {}; previousSchedule = {}; templates = {};
         }
     };
@@ -80,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderTemplateDropdown = () => {
         templateSelect.innerHTML = '';
         const placeholder = document.createElement('md-select-option');
-        templateSelect.appendChild(placeholder); // Add a blank option
+        templateSelect.appendChild(placeholder);
         for (const name in templates) {
             const option = document.createElement('md-select-option');
             option.value = name;
@@ -92,14 +85,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveTemplate = () => {
         const name = templateNameInput.value.trim();
         if (!name) {
-            alert("Please enter a name for the template.");
+            alert("Por favor, introduce un nombre para la plantilla.");
             return;
         }
         if (employees.length === 0) {
-            alert("Cannot save an empty schedule as a template.");
+            alert("No se puede guardar un horario vacío como plantilla.");
             return;
         }
-
         const template = { name: name, requirements: {} };
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         days.forEach((day, dayIndex) => {
@@ -111,40 +103,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-
         templates[name] = template;
         saveState();
         renderTemplateDropdown();
-        alert(`Template "${name}" saved!`);
+        alert(`Plantilla "${name}" guardada!`);
         templateNameInput.value = '';
     };
 
     // --- AUTOMATIC SCHEDULE GENERATION ---
     const checkRestPeriod = (prevShiftCode, currentShiftCode) => {
         if (!prevShiftCode || prevShiftCode === 'Libre' || !currentShiftCode || currentShiftCode === 'Libre') return true;
-
         const getTimes = (code) => shifts[code] || (code.includes('-') ? { 'Start Time': code.split('-')[0], 'End Time': code.split('-')[1] } : null);
         const prevShift = getTimes(prevShiftCode);
         const currentShift = getTimes(currentShiftCode);
-
         if (!prevShift || !currentShift) return true;
-
         const prevEndTime = parseTime(prevShift['End Time']);
         const currentStartTime = parseTime(currentShift['Start Time']);
         let restMinutes = (24 * 60 - prevEndTime) + currentStartTime;
         if (parseTime(prevShift['Start Time']) > prevEndTime) restMinutes -= 24 * 60;
-
         return (restMinutes / 60) >= RULES.MIN_REST_HOURS;
     };
 
     const generateScheduleFromTemplate = () => {
         const templateName = templateSelect.value;
         let templateRequirements;
-
         if (templateName && templates[templateName]) {
             templateRequirements = templates[templateName].requirements;
         } else {
-            if (!confirm("No template selected. Use the current schedule as a template to generate a new week?")) return;
+            if (!confirm("No hay plantilla seleccionada. ¿Usar el horario actual como plantilla para generar una nueva semana?")) return;
             templateRequirements = {};
             const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
             days.forEach((day, dayIndex) => {
@@ -157,36 +143,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
         }
-
         let unassignedShifts = [], employeeHours = {}, employeeAffinity = {}, daysWorked = {};
-
         employees.forEach(emp => {
             emp.schedule = Array(7).fill('Libre');
             employeeHours[emp.id] = 0;
             employeeAffinity[emp.id] = null;
             daysWorked[emp.id] = 0;
         });
-
         const mainManager = employees.find(e => e['Employee Name'] === RULES.MAIN_MANAGER_NAME);
         const managerShift = Object.keys(shifts).find(s => s.startsWith('AM') && shifts[s].Category === 'Morning') || 'Libre';
         if (mainManager) {
-            for (let i = 0; i < 5; i++) { // Mon-Fri
+            for (let i = 0; i < 5; i++) {
                 mainManager.schedule[i] = managerShift;
                 employeeHours[mainManager.id] += calculateWorkedHours(managerShift);
                 daysWorked[mainManager.id]++;
             }
             employeeAffinity[mainManager.id] = 'Morning';
         }
-
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         days.forEach((day, dayIndex) => {
             const dailyRequirements = templateRequirements[day] || [];
             let assignedToday = new Set();
             if (mainManager && mainManager.schedule[dayIndex] !== 'Libre') assignedToday.add(mainManager.id);
-
             dailyRequirements.forEach(req => {
                 const prevDayShiftIndex = (dayIndex - 1 + 7) % 7;
-
                 let candidates = employees.filter(emp => {
                     const maxWorkDays = emp['Contract Hours'] == 44 ? 5 : 4;
                     return emp.Type === req.role &&
@@ -202,7 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (scoreA !== scoreB) return scoreA - scoreB;
                     return employeeHours[a.id] - employeeHours[b.id];
                 });
-
                 if (candidates.length > 0) {
                     const assignedEmployee = candidates[0];
                     assignedEmployee.schedule[dayIndex] = req.shiftCode;
@@ -213,25 +192,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         employeeAffinity[assignedEmployee.id] = getShiftCategory(req.shiftCode);
                     }
                 } else {
-                    unassignedShifts.push(`- ${day}: ${req.role} for shift ${req.shiftCode}`);
+                    unassignedShifts.push(`- ${day}: ${req.role} para turno ${req.shiftCode}`);
                 }
             });
         });
-
-        let finalMessage = "Schedule generated successfully!", overtimeWarnings = [], daysOffWarnings = [];
+        let finalMessage = "Horario generado con éxito!", overtimeWarnings = [], daysOffWarnings = [];
         employees.forEach(emp => {
             const totalHours = emp.schedule.reduce((acc, shift) => acc + calculateWorkedHours(shift), 0);
-            if (totalHours > emp['Contract Hours']) overtimeWarnings.push(`- WARNING: ${emp['Employee Name']} is over by ${(totalHours - emp['Contract Hours']).toFixed(1)} hours.`);
-
+            if (totalHours > emp['Contract Hours']) overtimeWarnings.push(`- ADVERTENCIA: ${emp['Employee Name']} se excede por ${(totalHours - emp['Contract Hours']).toFixed(1)} horas.`);
             const requiredDaysOff = emp['Contract Hours'] == 44 ? 2 : 3;
             const actualDaysOff = emp.schedule.filter(s => s === 'Libre').length;
-            if (actualDaysOff !== requiredDaysOff) daysOffWarnings.push(`- WARNING: ${emp['Employee Name']} has ${actualDaysOff} days off, should have ${requiredDaysOff}.`);
+            if (actualDaysOff !== requiredDaysOff) daysOffWarnings.push(`- ADVERTENCIA: ${emp['Employee Name']} tiene ${actualDaysOff} días libres, debería tener ${requiredDaysOff}.`);
         });
-
-        if (unassignedShifts.length > 0) finalMessage += "\n\nCould not assign:\n" + unassignedShifts.join("\n");
-        if (overtimeWarnings.length > 0) finalMessage += "\n\nContract hour warnings:\n" + overtimeWarnings.join("\n");
-        if (daysOffWarnings.length > 0) finalMessage += "\n\nDays off warnings:\n" + daysOffWarnings.join("\n");
-
+        if (unassignedShifts.length > 0) finalMessage += "\n\nNo se pudo asignar:\n" + unassignedShifts.join("\n");
+        if (overtimeWarnings.length > 0) finalMessage += "\n\nAdvertencias de horas de contrato:\n" + overtimeWarnings.join("\n");
+        if (daysOffWarnings.length > 0) finalMessage += "\n\nAdvertencias de días libres:\n" + daysOffWarnings.join("\n");
         alert(finalMessage);
         renderAll();
         saveState();
@@ -249,7 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     const parseTime = (timeStr) => { const [h, m] = (timeStr || "0:0").split(':').map(Number); return h * 60 + (m || 0); };
-
     const getNextWeekDates = () => {
         const dates = [];
         const today = new Date();
@@ -264,7 +238,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return dates;
     };
-
     const downloadCSV = (csvContent, fileName) => {
         const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
         const link = document.createElement("a");
@@ -274,7 +247,6 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click();
         document.body.removeChild(link);
     };
-
     const getShiftCategory = (shiftCode) => {
         if (!shiftCode) return 'Custom';
         if (shifts[shiftCode]) return shifts[shiftCode].Category;
@@ -313,10 +285,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- RENDER FUNCTIONS ---
     const renderAll = () => {
         if (employees.length === 0) {
-            scheduleContainer.innerHTML = `<div id="placeholder"><p>Import an employee CSV to begin.</p></div>`;
+            scheduleContainer.innerHTML = `<div id="placeholder"><p>Importa un archivo CSV de empleados para comenzar.</p></div>`;
             countersContainer.innerHTML = '';
             return;
         }
+        scheduleContainer.querySelector('#placeholder')?.remove();
         renderTable();
         if (Object.keys(shifts).length > 0) {
             renderCounters();
@@ -326,59 +299,59 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderTable = () => {
-        const weekDates = getNextWeekDates();
-        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        let headerHTML = `<tr><th>Employee</th><th>Contract</th><th>Total</th>${days.map((day, i) => `<th>${day}<div class="date-header">${weekDates[i]}</div></th>`).join('')}</tr>`;
+        const managers = employees.filter(emp => emp.Type === 'Manager');
+        const crew = employees.filter(emp => emp.Type === 'Crew');
 
-        let bodyHTML = employees.map(emp => {
-            const totalHours = emp.schedule.reduce((acc, shift) => acc + calculateWorkedHours(shift), 0);
-            const prevWeekSchedule = previousSchedule[emp['Employee Name']];
-            const lastWeekNight = prevWeekSchedule && getShiftCategory(prevWeekSchedule[6]) === 'Night';
-            const thisWeekNight = emp.schedule[0] && getShiftCategory(emp.schedule[0]) === 'Night';
-            const warningIcon = (lastWeekNight && thisWeekNight) ? `<span class="material-symbols-outlined warning-icon" title="Night shift after night shift week">warning</span>` : '';
-
-            const shiftCells = emp.schedule.map((shift, dayIndex) => {
-                const shiftData = shifts[shift];
-                const color = shiftData ? shiftData.Color : '#FFFFFF';
-                const optionsHTML = Object.keys(shifts).map(code => `<md-select-option value="${code}" ${code === shift ? 'selected' : ''}>${code}</md-select-option>`).join('');
-
-                let ctaButton = '';
-                if (!shiftData && shift && shift !== 'Libre') {
-                    ctaButton = `<md-icon-button class="add-shift-cta" data-shift-code="${shift}"><span class="material-symbols-outlined">add</span></md-icon-button>`;
-                }
-
-                let previousShiftHTML = '';
-                if (compareWeekSwitch.selected && prevWeekSchedule) {
-                    const prevShift = prevWeekSchedule[dayIndex];
-                    previousShiftHTML = `<span class="previous-shift-text">${prevShift || 'N/A'}</span>`;
-                }
-
-                return `<td style="background-color:${color};">
-                    <span class="shift-text">${shift || ''} ${ctaButton}</span>
-                    <md-outlined-select class="shift-select" value="${shift}" data-employee-id="${emp.id}" data-day-index="${dayIndex}">${optionsHTML}</md-outlined-select>
-                    ${previousShiftHTML}
-                </td>`;
+        const generateTableHTML = (employeeList, title) => {
+            if (employeeList.length === 0) return '';
+            const weekDates = getNextWeekDates();
+            const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+            let headerHTML = `<tr><th>Empleado</th><th>Contrato</th><th>Total</th>${days.map((day, i) => `<th>${day}<div class="date-header">${weekDates[i]}</div></th>`).join('')}</tr>`;
+            let bodyHTML = employeeList.map(emp => {
+                const totalHours = emp.schedule.reduce((acc, shift) => acc + calculateWorkedHours(shift), 0);
+                const prevWeekSchedule = previousSchedule[emp['Employee Name']];
+                const lastWeekNight = prevWeekSchedule && getShiftCategory(prevWeekSchedule[6]) === 'Night';
+                const thisWeekNight = emp.schedule[0] && getShiftCategory(emp.schedule[0]) === 'Night';
+                const warningIcon = (lastWeekNight && thisWeekNight) ? `<span class="material-symbols-outlined warning-icon" title="Turno de noche después de una semana de turno de noche">warning</span>` : '';
+                const shiftCells = emp.schedule.map((shift, dayIndex) => {
+                    const shiftData = shifts[shift];
+                    const color = shiftData ? shiftData.Color : '#FFFFFF';
+                    const optionsHTML = Object.keys(shifts).map(code => `<md-select-option value="${code}" ${code === shift ? 'selected' : ''}>${code}</md-select-option>`).join('');
+                    let ctaButton = '';
+                    if (!shiftData && shift && shift !== 'Libre') {
+                        ctaButton = `<md-icon-button class="add-shift-cta" data-shift-code="${shift}"><span class="material-symbols-outlined">add</span></md-icon-button>`;
+                    }
+                    let previousShiftHTML = '';
+                    if (compareWeekSwitch.selected && prevWeekSchedule) {
+                        const prevShift = prevWeekSchedule[dayIndex];
+                        previousShiftHTML = `<span class="previous-shift-text">${prevShift || 'N/A'}</span>`;
+                    }
+                    return `<td style="background-color:${color};">
+                        <span class="shift-text">${shift || ''} ${ctaButton}</span>
+                        <md-outlined-select class="shift-select" value="${shift}" data-employee-id="${emp.id}" data-day-index="${dayIndex}">${optionsHTML}</md-outlined-select>
+                        ${previousShiftHTML}
+                    </td>`;
+                }).join('');
+                return `<tr><td class="employee-name">${warningIcon}${emp['Employee Name']}</td><td>${emp['Contract Hours']}</td><td>${totalHours.toFixed(1)}</td>${shiftCells}</tr>`;
             }).join('');
+            return `<h2>${title}</h2><table class="schedule-table"><thead>${headerHTML}</thead><tbody>${bodyHTML}</tbody></table>`;
+        };
 
-            return `<tr><td class="employee-name">${warningIcon}${emp['Employee Name']}</td><td>${emp['Contract Hours']}</td><td>${totalHours.toFixed(1)}</td>${shiftCells}</tr>`;
-        }).join('');
-
-        scheduleContainer.innerHTML = `<table id="schedule-table"><thead>${headerHTML}</thead><tbody>${bodyHTML}</tbody></table>`;
+        managerScheduleContainer.innerHTML = generateTableHTML(managers, 'Gerentes');
+        crewScheduleContainer.innerHTML = generateTableHTML(crew, 'Equipo');
     };
 
     const renderCounters = () => {
-        let managerHTML = `<h3>Managers</h3><table id="manager-counter-table">`;
-        let crewHTML = `<h3>Crews</h3><table id="crew-counter-table">`;
-        const header = `<thead><tr><th>Category</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th></tr></thead><tbody>`;
+        let managerHTML = `<h3>Gerentes</h3><table id="manager-counter-table">`;
+        let crewHTML = `<h3>Equipo</h3><table id="crew-counter-table">`;
+        const header = `<thead><tr><th>Categoría</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th><th>Dom</th></tr></thead><tbody>`;
         managerHTML += header;
         crewHTML += header;
-
         const counters = { Manager: {}, Crew: {} };
         ['Morning', 'Afternoon', 'Night', 'Custom', 'Off'].forEach(cat => {
             counters.Manager[cat] = Array(7).fill(0);
             counters.Crew[cat] = Array(7).fill(0);
         });
-
         employees.forEach(emp => {
             emp.schedule.forEach((shiftCode, dayIndex) => {
                 const category = getShiftCategory(shiftCode);
@@ -387,7 +360,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-
         for (const category in counters.Manager) {
             if (counters.Manager[category].some(c => c > 0)) {
                 managerHTML += `<tr><td>${category}</td>${counters.Manager[category].map(c => `<td>${c}</td>`).join('')}</tr>`;
@@ -398,14 +370,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 crewHTML += `<tr><td>${category}</td>${counters.Crew[category].map(c => `<td>${c}</td>`).join('')}</tr>`;
             }
         }
-
         managerHTML += '</tbody></table>';
         crewHTML += '</tbody></table>';
         countersContainer.innerHTML = managerHTML + crewHTML;
     };
 
     const renderEmployeeCRUD = () => {
-        let html = `<thead><tr><th>Name</th><th>Title</th><th>Type</th><th>Hours</th><th>Actions</th></tr></thead><tbody>`;
+        let html = `<thead><tr><th>Nombre</th><th>Cargo</th><th>Tipo</th><th>Horas</th><th>Acciones</th></tr></thead><tbody>`;
         employees.forEach(emp => {
             html += `<tr>
                 <td>${emp['Employee Name']}</td><td>${emp['Title']}</td><td>${emp.Type}</td><td>${emp['Contract Hours']}</td>
@@ -420,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderShiftCRUD = () => {
-        let html = `<thead><tr><th>Code</th><th>Category</th><th>Times</th><th>Hours</th><th>Color</th><th>Actions</th></tr></thead><tbody>`;
+        let html = `<thead><tr><th>Código</th><th>Categoría</th><th>Horario</th><th>Horas</th><th>Color</th><th>Acciones</th></tr></thead><tbody>`;
         Object.values(shifts).forEach(s => {
             html += `<tr>
                 <td>${s['Shift Code']}</td><td>${s.Category}</td><td>${s['Start Time']}-${s['End Time']}</td><td>${s['Hours Worked']}</td>
@@ -456,7 +427,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData(shiftForm);
         const data = Object.fromEntries(formData.entries());
         const originalCode = data.originalCode;
-
         if (originalCode && originalCode !== data.code) {
             delete shifts[originalCode];
             employees.forEach(emp => {
@@ -495,7 +465,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = await file.text();
         const data = parseCSV(text);
         const type = e.target.dataset.type;
-
         if (type === 'employee') {
             employees = data.map((emp, i) => ({ ...emp, id: i, schedule: Array(7).fill('Libre') }));
             if (mainTabs.activeTab.id === 'tab-employees') renderEmployeeCRUD();
@@ -523,7 +492,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.tab-panel').forEach(p => p.hidden = true);
         const activePanelId = mainTabs.activeTab.id.replace('tab-', 'panel-');
         document.getElementById(activePanelId).hidden = false;
-
         if (activePanelId === 'panel-employees') renderEmployeeCRUD();
         if (activePanelId === 'panel-shifts') renderShiftCRUD();
     });
@@ -594,7 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (deleteBtn) {
             const empId = deleteBtn.dataset.id;
             const emp = employees.find(e => e.id == empId);
-            if (emp && confirm(`Are you sure you want to delete ${emp['Employee Name']}?`)) {
+            if (emp && confirm(`¿Estás seguro de que quieres eliminar a ${emp['Employee Name']}?`)) {
                 employees = employees.filter(e => e.id != empId);
                 renderEmployeeCRUD();
                 renderAll();
@@ -609,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (editBtn) { openShiftDialog(editBtn.dataset.code); }
         if (deleteBtn) {
             const code = deleteBtn.dataset.code;
-            if (confirm(`Delete shift "${code}"? All assigned shifts will be reset to "Libre".`)) {
+            if (confirm(`¿Eliminar el turno "${code}"? Todos los turnos asignados se restablecerán a "Libre".`)) {
                 delete shifts[code];
                 employees.forEach(emp => {
                     emp.schedule = emp.schedule.map(s => s === code ? 'Libre' : s);
@@ -625,11 +593,11 @@ document.addEventListener('DOMContentLoaded', () => {
     generateFromTemplateBtn.addEventListener('click', generateScheduleFromTemplate);
 
     addNewEmployeeBtn.addEventListener('click', () => {
-        const name = prompt("Enter new employee's full name:");
+        const name = prompt("Introduce el nombre completo del nuevo empleado:");
         if (!name) return;
-        const title = prompt("Enter title:", "Crew");
-        const type = prompt("Enter type (Manager or Crew):", "Crew");
-        const hours = prompt("Enter contract hours:", 30);
+        const title = prompt("Introduce el cargo:", "Equipo");
+        const type = prompt("Introduce el tipo (Manager o Crew):", "Crew");
+        const hours = prompt("Introduce las horas de contrato:", 30);
         employees.push({
             'Employee Name': name, 'Title': title, 'Type': type, 'Contract Hours': hours,
             id: employees.length > 0 ? Math.max(...employees.map(e => e.id)) + 1 : 0,
@@ -671,10 +639,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     exportExcelBtn.addEventListener('click', () => {
-        const table = document.getElementById('schedule-table');
-        if (!table) return;
-        const wb = XLSX.utils.table_to_book(table, { sheet: "Schedule" });
-        XLSX.writeFile(wb, "schedule.xlsx");
+        // To export both tables, we need to create a custom workbook
+        const wb = XLSX.utils.book_new();
+        const managerTable = managerScheduleContainer.querySelector('table');
+        const crewTable = crewScheduleContainer.querySelector('table');
+        if (managerTable) {
+            const ws_managers = XLSX.utils.table_to_sheet(managerTable);
+            XLSX.utils.book_append_sheet(wb, ws_managers, "Gerentes");
+        }
+        if (crewTable) {
+            const ws_crew = XLSX.utils.table_to_sheet(crewTable);
+            XLSX.utils.book_append_sheet(wb, ws_crew, "Equipo");
+        }
+        XLSX.writeFile(wb, "horario.xlsx");
     });
 
     exportImageBtn.addEventListener('click', () => {
@@ -682,7 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!schedule) return;
         html2canvas(schedule, { scale: 2 }).then(canvas => {
             const link = document.createElement('a');
-            link.download = 'schedule.png';
+            link.download = 'horario.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
         });
@@ -698,7 +675,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
             pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save('schedule.pdf');
+            pdf.save('horario.pdf');
         });
     });
 
@@ -709,20 +686,15 @@ document.addEventListener('DOMContentLoaded', () => {
     schedulePanel.classList.add('view-mode');
     document.getElementById('panel-employees').hidden = true;
     document.getElementById('panel-shifts').hidden = true;
+
     // --- PWA SERVICE WORKER REGISTRATION ---
-    // First, check if the browser supports service workers
     if ('serviceWorker' in navigator) {
-        // Wait until the page is fully loaded to register the service worker
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-                .then(registration => {
-                    // This message shows in the browser's developer console if successful
-                    console.log('✅ ServiceWorker registration successful with scope: ', registration.scope);
-                })
-                .catch(err => {
-                    // This message shows if there was an error
-                    console.log('❌ ServiceWorker registration failed: ', err);
-                });
+            navigator.serviceWorker.register('./sw.js').then(registration => {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            }, err => {
+                console.log('ServiceWorker registration failed: ', err);
+            });
         });
     }
 });
