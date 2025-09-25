@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
             employees = []; shifts = {}; previousSchedule = {}; templates = {};
         }
     };
-    
+
     // --- TEMPLATE MANAGEMENT ---
     const renderTemplateDropdown = () => {
         templateSelect.innerHTML = '';
@@ -122,11 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- AUTOMATIC SCHEDULE GENERATION ---
     const checkRestPeriod = (prevShiftCode, currentShiftCode) => {
         if (!prevShiftCode || prevShiftCode === 'Libre' || !currentShiftCode || currentShiftCode === 'Libre') return true;
-        
+
         const getTimes = (code) => shifts[code] || (code.includes('-') ? { 'Start Time': code.split('-')[0], 'End Time': code.split('-')[1] } : null);
         const prevShift = getTimes(prevShiftCode);
         const currentShift = getTimes(currentShiftCode);
-        
+
         if (!prevShift || !currentShift) return true;
 
         const prevEndTime = parseTime(prevShift['End Time']);
@@ -186,14 +186,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             dailyRequirements.forEach(req => {
                 const prevDayShiftIndex = (dayIndex - 1 + 7) % 7;
-                
+
                 let candidates = employees.filter(emp => {
                     const maxWorkDays = emp['Contract Hours'] == 44 ? 5 : 4;
                     return emp.Type === req.role &&
-                           emp['Employee Name'] !== RULES.MAIN_MANAGER_NAME &&
-                           !assignedToday.has(emp.id) &&
-                           daysWorked[emp.id] < maxWorkDays &&
-                           checkRestPeriod(emp.schedule[prevDayShiftIndex], req.shiftCode);
+                        emp['Employee Name'] !== RULES.MAIN_MANAGER_NAME &&
+                        !assignedToday.has(emp.id) &&
+                        daysWorked[emp.id] < maxWorkDays &&
+                        checkRestPeriod(emp.schedule[prevDayShiftIndex], req.shiftCode);
                 }).sort((a, b) => {
                     const affinityA = employeeAffinity[a.id], affinityB = employeeAffinity[b.id];
                     const requiredCategory = getShiftCategory(req.shiftCode);
@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
         employees.forEach(emp => {
             const totalHours = emp.schedule.reduce((acc, shift) => acc + calculateWorkedHours(shift), 0);
             if (totalHours > emp['Contract Hours']) overtimeWarnings.push(`- WARNING: ${emp['Employee Name']} is over by ${(totalHours - emp['Contract Hours']).toFixed(1)} hours.`);
-            
+
             const requiredDaysOff = emp['Contract Hours'] == 44 ? 2 : 3;
             const actualDaysOff = emp.schedule.filter(s => s === 'Libre').length;
             if (actualDaysOff !== requiredDaysOff) daysOffWarnings.push(`- WARNING: ${emp['Employee Name']} has ${actualDaysOff} days off, should have ${requiredDaysOff}.`);
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (unassignedShifts.length > 0) finalMessage += "\n\nCould not assign:\n" + unassignedShifts.join("\n");
         if (overtimeWarnings.length > 0) finalMessage += "\n\nContract hour warnings:\n" + overtimeWarnings.join("\n");
         if (daysOffWarnings.length > 0) finalMessage += "\n\nDays off warnings:\n" + daysOffWarnings.join("\n");
-        
+
         alert(finalMessage);
         renderAll();
         saveState();
@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     const parseTime = (timeStr) => { const [h, m] = (timeStr || "0:0").split(':').map(Number); return h * 60 + (m || 0); };
-    
+
     const getNextWeekDates = () => {
         const dates = [];
         const today = new Date();
@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return dates;
     };
-    
+
     const downloadCSV = (csvContent, fileName) => {
         const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
         const link = document.createElement("a");
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return durationHours > 4 ? durationHours - 0.5 : durationHours;
     };
-    
+
     // --- RENDER FUNCTIONS ---
     const renderAll = () => {
         if (employees.length === 0) {
@@ -329,19 +329,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const weekDates = getNextWeekDates();
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         let headerHTML = `<tr><th>Employee</th><th>Contract</th><th>Total</th>${days.map((day, i) => `<th>${day}<div class="date-header">${weekDates[i]}</div></th>`).join('')}</tr>`;
-        
+
         let bodyHTML = employees.map(emp => {
             const totalHours = emp.schedule.reduce((acc, shift) => acc + calculateWorkedHours(shift), 0);
             const prevWeekSchedule = previousSchedule[emp['Employee Name']];
             const lastWeekNight = prevWeekSchedule && getShiftCategory(prevWeekSchedule[6]) === 'Night';
             const thisWeekNight = emp.schedule[0] && getShiftCategory(emp.schedule[0]) === 'Night';
             const warningIcon = (lastWeekNight && thisWeekNight) ? `<span class="material-symbols-outlined warning-icon" title="Night shift after night shift week">warning</span>` : '';
-            
+
             const shiftCells = emp.schedule.map((shift, dayIndex) => {
                 const shiftData = shifts[shift];
                 const color = shiftData ? shiftData.Color : '#FFFFFF';
                 const optionsHTML = Object.keys(shifts).map(code => `<md-select-option value="${code}" ${code === shift ? 'selected' : ''}>${code}</md-select-option>`).join('');
-                
+
                 let ctaButton = '';
                 if (!shiftData && shift && shift !== 'Libre') {
                     ctaButton = `<md-icon-button class="add-shift-cta" data-shift-code="${shift}"><span class="material-symbols-outlined">add</span></md-icon-button>`;
@@ -359,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${previousShiftHTML}
                 </td>`;
             }).join('');
-            
+
             return `<tr><td class="employee-name">${warningIcon}${emp['Employee Name']}</td><td>${emp['Contract Hours']}</td><td>${totalHours.toFixed(1)}</td>${shiftCells}</tr>`;
         }).join('');
 
@@ -372,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const header = `<thead><tr><th>Category</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th></tr></thead><tbody>`;
         managerHTML += header;
         crewHTML += header;
-        
+
         const counters = { Manager: {}, Crew: {} };
         ['Morning', 'Afternoon', 'Night', 'Custom', 'Off'].forEach(cat => {
             counters.Manager[cat] = Array(7).fill(0);
@@ -418,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
         html += `</tbody>`;
         employeesCrudTable.innerHTML = html;
     };
-    
+
     const renderShiftCRUD = () => {
         let html = `<thead><tr><th>Code</th><th>Category</th><th>Times</th><th>Hours</th><th>Color</th><th>Actions</th></tr></thead><tbody>`;
         Object.values(shifts).forEach(s => {
@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
         html += `</tbody>`;
         shiftsCrudTable.innerHTML = html;
     };
-    
+
     // --- DIALOG & FORM LOGIC ---
     const openShiftDialog = (shiftCodeToEdit = null) => {
         shiftForm.reset();
@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData(shiftForm);
         const data = Object.fromEntries(formData.entries());
         const originalCode = data.originalCode;
-        
+
         if (originalCode && originalCode !== data.code) {
             delete shifts[originalCode];
             employees.forEach(emp => {
@@ -471,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAll();
         saveState();
     };
-    
+
     const updateHoursInDialog = () => {
         const start = shiftForm.elements.start.value;
         const end = shiftForm.elements.end.value;
@@ -523,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.tab-panel').forEach(p => p.hidden = true);
         const activePanelId = mainTabs.activeTab.id.replace('tab-', 'panel-');
         document.getElementById(activePanelId).hidden = false;
-        
+
         if (activePanelId === 'panel-employees') renderEmployeeCRUD();
         if (activePanelId === 'panel-shifts') renderShiftCRUD();
     });
@@ -534,7 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     compareWeekSwitch.addEventListener('change', renderTable);
-    
+
     shiftDialog.addEventListener('close', () => { if (shiftDialog.returnValue === 'save') handleShiftFormSubmit(); });
     shiftForm.elements.start.addEventListener('input', updateHoursInDialog);
     shiftForm.elements.end.addEventListener('input', updateHoursInDialog);
@@ -620,7 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-    
+
     saveTemplateBtn.addEventListener('click', saveTemplate);
     generateFromTemplateBtn.addEventListener('click', generateScheduleFromTemplate);
 
@@ -632,16 +632,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const hours = prompt("Enter contract hours:", 30);
         employees.push({
             'Employee Name': name, 'Title': title, 'Type': type, 'Contract Hours': hours,
-            id: employees.length > 0 ? Math.max(...employees.map(e => e.id)) + 1 : 0, 
+            id: employees.length > 0 ? Math.max(...employees.map(e => e.id)) + 1 : 0,
             schedule: Array(7).fill('Libre')
         });
         renderEmployeeCRUD();
         renderAll();
         saveState();
     });
-    
+
     addNewShiftBtn.addEventListener('click', () => openShiftDialog());
-    
+
     if (exportEmployeesBtn) {
         exportEmployeesBtn.addEventListener('click', () => {
             let csvContent = "Employee Name,Title,Type,Contract Hours\r\n";
@@ -663,7 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
             downloadCSV(csvContent, "shifts_export.csv");
         });
     }
-    
+
     exportScheduleCsvBtn.addEventListener('click', () => {
         let csvContent = "Employee Name,Mon,Tue,Wed,Thu,Fri,Sat,Sun\r\n";
         employees.forEach(emp => { const row = [emp['Employee Name'], ...emp.schedule].join(','); csvContent += row + "\r\n"; });
@@ -676,7 +676,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const wb = XLSX.utils.table_to_book(table, { sheet: "Schedule" });
         XLSX.writeFile(wb, "schedule.xlsx");
     });
-    
+
     exportImageBtn.addEventListener('click', () => {
         const schedule = document.getElementById('schedule-container');
         if (!schedule) return;
@@ -709,4 +709,20 @@ document.addEventListener('DOMContentLoaded', () => {
     schedulePanel.classList.add('view-mode');
     document.getElementById('panel-employees').hidden = true;
     document.getElementById('panel-shifts').hidden = true;
+    // --- PWA SERVICE WORKER REGISTRATION ---
+    // First, check if the browser supports service workers
+    if ('serviceWorker' in navigator) {
+        // Wait until the page is fully loaded to register the service worker
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(registration => {
+                    // This message shows in the browser's developer console if successful
+                    console.log('✅ ServiceWorker registration successful with scope: ', registration.scope);
+                })
+                .catch(err => {
+                    // This message shows if there was an error
+                    console.log('❌ ServiceWorker registration failed: ', err);
+                });
+        });
+    }
 });

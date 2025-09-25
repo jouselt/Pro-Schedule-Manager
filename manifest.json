@@ -1,0 +1,16 @@
+{
+    "name": "Pro Schedule Manager",
+    "short_name": "Scheduler",
+    "start_url": "./shift_managers.html",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#3f51b5",
+    "description": "A professional shift scheduling application.",
+    "icons": [
+        {
+            "src": "images/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
