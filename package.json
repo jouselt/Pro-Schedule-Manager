@@ -1,0 +1,28 @@
+{
+  "name": "pro-schedule-manager",
+  "version": "1.0.0",
+  "description": "A professional shift scheduling application.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "package": "electron-builder"
+  },
+  "author": "Jouselt Fernandez",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^38.1.2",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.compendium.proschedulermanager",
+    "productName": "Pro Schedule Manager",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": "dmg"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/*"
+    ]
+  }
+}
