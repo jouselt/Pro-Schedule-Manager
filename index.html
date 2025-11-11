@@ -24,7 +24,43 @@
 
 <body>
 
-    <div class="container">
+    <div id="onboarding-container">
+        <div class="stepper">
+            <div class="step active" data-step="1">
+                <div class="step-icon">1</div>
+                <div class="step-label">Welcome</div>
+            </div>
+            <div class="step" data-step="2">
+                <div class="step-icon">2</div>
+                <div class="step-label">Upload Employees</div>
+            </div>
+            <div class="step" data-step="3">
+                <div class="step-icon">3</div>
+                <div class="step-label">Upload Shifts</div>
+            </div>
+        </div>
+        <div class="step-content active" data-step="1">
+            <h2>Welcome to Pro Schedule Manager</h2>
+            <p>This tool will help you manage your employee schedules efficiently.</p>
+            <md-filled-button id="next-step-1">Next</md-filled-button>
+        </div>
+        <div class="step-content" data-step="2">
+            <h2>Upload Employees File</h2>
+            <p>Please upload a CSV file with your employee information.</p>
+            <md-filled-button class="import-button" data-type="employee">Import Employees</md-filled-button>
+            <p class="feedback-message" id="employee-feedback"></p>
+            <md-filled-button id="next-step-2" disabled>Next</md-filled-button>
+        </div>
+        <div class="step-content" data-step="3">
+            <h2>Upload Shifts File</h2>
+            <p>Please upload a CSV file with your shift definitions.</p>
+            <md-filled-button class="import-button" data-type="shift">Import Shifts</md-filled-button>
+            <p class="feedback-message" id="shift-feedback"></p>
+            <md-filled-button id="start-app-btn" disabled>Get Started</md-filled-button>
+        </div>
+    </div>
+
+    <div class="container" hidden>
         <h1>Pro Schedule Manager</h1>
 
         <md-tabs aria-label="Contenido a ver">

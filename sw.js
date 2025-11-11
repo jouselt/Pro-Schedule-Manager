@@ -1,7 +1,7 @@
 // sw.js
 
 // A name for our cache
-const CACHE_NAME = 'pro-schedule-manager-v1';
+const CACHE_NAME = 'pro-schedule-manager-v1.1';
 
 // A list of all the files we want to cache
 const urlsToCache = [
@@ -47,5 +47,28 @@ self.addEventListener('fetch', event => {
                 // Otherwise, fetch the file from the network.
                 return fetch(event.request);
             })
+    );
+});
+
+/**
+ * The activate event is fired when the service worker is activated.
+ * We use this event to delete any old caches that are no longer needed.
+ */
+self.addEventListener('activate', event => {
+    // The new cache we want to keep
+    const cacheWhitelist = [CACHE_NAME];
+
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    // If this cache name is not in our whitelist, delete it
+                    if (cacheWhitelist.indexOf(cacheName) === -1) {
+                        console.log('Deleting old cache:', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
     );
 });

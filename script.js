@@ -1,4 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- ONBOARDING ELEMENTS ---
+    const onboardingContainer = document.getElementById('onboarding-container');
+    const mainContainer = document.querySelector('.container');
+    const nextStep1Btn = document.getElementById('next-step-1');
+    const nextStep2Btn = document.getElementById('next-step-2');
+    const startAppBtn = document.getElementById('start-app-btn');
+    const employeeFeedback = document.getElementById('employee-feedback');
+    const shiftFeedback = document.getElementById('shift-feedback');
+
     // --- STATE MANAGEMENT ---
     let employees = [];
     let shifts = {};
@@ -40,6 +49,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportImageBtn = document.getElementById('export-image');
     const exportPdfBtn = document.getElementById('export-pdf');
 
+    // --- ONBOARDING LOGIC ---
+    const goToStep = (stepNumber) => {
+        document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+        document.querySelectorAll('.step-content').forEach(content => content.classList.remove('active'));
+        document.querySelector(`.step[data-step="${stepNumber}"]`).classList.add('active');
+        document.querySelector(`.step-content[data-step="${stepNumber}"]`).classList.add('active');
+    };
+
+    const checkOnboardingCompletion = () => {
+        const employeesUploaded = employees.length > 0;
+        const shiftsUploaded = Object.keys(shifts).length > 0;
+
+        if (employeesUploaded) {
+            employeeFeedback.textContent = 'Employees file uploaded successfully.';
+            nextStep2Btn.disabled = false;
+        }
+
+        if (shiftsUploaded) {
+            shiftFeedback.textContent = 'Shifts file uploaded successfully.';
+        }
+
+        if (employeesUploaded && shiftsUploaded) {
+            startAppBtn.disabled = false;
+        }
+    };
+
+    const startApplication = () => {
+        onboardingContainer.hidden = true;
+        mainContainer.hidden = false;
+        initializeMainApp();
+    };
+
     // --- LOCAL STORAGE PERSISTENCE ---
     const saveState = () => {
         try {
@@ -47,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('scheduler_shifts', JSON.stringify(shifts));
             localStorage.setItem('scheduler_previousSchedule', JSON.stringify(previousSchedule));
             localStorage.setItem('scheduler_templates', JSON.stringify(templates));
+            localStorage.setItem('scheduler_onboarding_complete', 'true');
         } catch (e) {
             console.error("Error al guardar el estado en localStorage:", e);
             alert("No se pudo guardar el estado actual. El almacenamiento del navegador podría estar lleno o deshabilitado.");
@@ -55,6 +97,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loadState = () => {
         try {
+            const onboardingComplete = localStorage.getItem('scheduler_onboarding_complete') === 'true';
+            if (!onboardingComplete) {
+                mainContainer.hidden = true;
+                onboardingContainer.hidden = false;
+                return false; // Onboarding not complete
+            }
+
             const storedEmployees = localStorage.getItem('scheduler_employees');
             const storedShifts = localStorage.getItem('scheduler_shifts');
             const storedPrevious = localStorage.getItem('scheduler_previousSchedule');
@@ -63,9 +112,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (storedShifts) shifts = JSON.parse(storedShifts);
             if (storedPrevious) previousSchedule = JSON.parse(storedPrevious);
             if (storedTemplates) templates = JSON.parse(storedTemplates);
+
+            if (employees.length === 0 || Object.keys(shifts).length === 0) {
+                mainContainer.hidden = true;
+                onboardingContainer.hidden = false;
+                localStorage.removeItem('scheduler_onboarding_complete');
+                return false; // Data is missing, restart onboarding
+            }
+
+            return true; // State loaded, onboarding complete
         } catch (e) {
             console.error("Error al cargar el estado desde localStorage", e);
             employees = []; shifts = {}; previousSchedule = {}; templates = {};
+            mainContainer.hidden = true;
+            onboardingContainer.hidden = false;
+            return false;
         }
     };
 
@@ -467,11 +528,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const type = e.target.dataset.type;
         if (type === 'employee') {
             employees = data.map((emp, i) => ({ ...emp, id: i, schedule: Array(7).fill('Libre') }));
-            if (mainTabs.activeTab.id === 'tab-employees') renderEmployeeCRUD();
+            if (mainTabs.activeTab?.id === 'tab-employees') renderEmployeeCRUD();
         } else if (type === 'shift') {
             shifts = {};
             data.forEach(s => shifts[s['Shift Code']] = s);
-            if (mainTabs.activeTab.id === 'tab-shifts') renderShiftCRUD();
+            if (mainTabs.activeTab?.id === 'tab-shifts') renderShiftCRUD();
         } else if (type === 'schedule') {
             data.forEach(record => {
                 const emp = employees.find(e => e['Employee Name'] === record['Employee Name']);
@@ -484,8 +545,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         e.target.value = '';
-        renderAll();
-        saveState();
+
+        if (!onboardingContainer.hidden) {
+            checkOnboardingCompletion();
+        } else {
+            renderAll();
+            saveState();
+        }
     });
 
     mainTabs.addEventListener('change', () => {
@@ -679,13 +745,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // --- ONBOARDING EVENT LISTENERS ---
+    nextStep1Btn.addEventListener('click', () => goToStep(2));
+    nextStep2Btn.addEventListener('click', () => goToStep(3));
+    startAppBtn.addEventListener('click', () => {
+        saveState();
+        startApplication();
+    });
+
     // --- INITIALIZATION ---
-    loadState();
-    renderAll();
-    renderTemplateDropdown();
-    schedulePanel.classList.add('view-mode');
-    document.getElementById('panel-employees').hidden = true;
-    document.getElementById('panel-shifts').hidden = true;
+    const initializeMainApp = () => {
+        renderAll();
+        renderTemplateDropdown();
+        schedulePanel.classList.add('view-mode');
+        document.getElementById('panel-employees').hidden = true;
+        document.getElementById('panel-shifts').hidden = true;
+    };
+
+    if (loadState()) {
+        onboardingContainer.hidden = true;
+        mainContainer.hidden = false;
+        initializeMainApp();
+    } else {
+        onboardingContainer.hidden = false;
+        mainContainer.hidden = true;
+    }
 
     // --- PWA SERVICE WORKER REGISTRATION ---
     if ('serviceWorker' in navigator) {
